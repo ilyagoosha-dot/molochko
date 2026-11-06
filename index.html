@@ -1,0 +1,955 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#241B27">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Молочко">
+<meta name="description" content="Дневник грудных кормлений: таймер до следующего кормления и подсказка, какой грудью кормить.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" sizes="192x192">
+<style>
+  :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
+  html,body{margin:0;font-family:system-ui,sans-serif;}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+</style>
+<title>Молочко</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+  :root{
+    --page-a:#241B27; --page-b:#1D1B2B;
+    --milk:#2B2231; --card:#342838; --sunk:#3D2F42;
+    --ink:#F7ECF0; --ink-soft:#B8A4B1; --line:#44344A;
+    --rose:#E78FA6; --rose-soft:#4A2E39; --rose-ink:#FBD5DE;
+    --lav:#A79EE4; --lav-soft:#332D52; --lav-ink:#DCD7FA;
+    --mint:#8FCDB8; --butter:#E7CE9C;
+    --shadow:rgba(0,0,0,.45); --scrim:rgba(14,9,18,.66);
+    --on-rose:#241A25; --on-lav:#241A25;
+    color-scheme:dark;
+  }
+  body[data-baby="boy"]{
+    --page-a:#141E2E; --page-b:#121A28;
+    --milk:#1A2434; --card:#212D41; --sunk:#29374D;
+    --ink:#EAF0F8; --ink-soft:#9DAEC4; --line:#33435C;
+    --rose:#E9C69A; --rose-soft:#3D3325; --rose-ink:#F6E3C7;
+    --lav:#7FC8C6; --lav-soft:#1E3A3B; --lav-ink:#CFEFEE;
+    --mint:#8FB8E0; --butter:#E9C69A;
+    --scrim:rgba(6,11,20,.68);
+    --on-rose:#2E2210; --on-lav:#0B2828;
+  }
+
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(70% 45% at 15% 0%, color-mix(in srgb, var(--rose) 22%, transparent) 0%, transparent 60%),
+      radial-gradient(60% 40% at 95% 18%, color-mix(in srgb, var(--lav) 24%, transparent) 0%, transparent 58%),
+      linear-gradient(170deg, var(--page-a), var(--page-b));
+    color:var(--ink);
+    font-family:"Nunito", ui-rounded, "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overscroll-behavior:none;
+  }
+  .app{
+    box-sizing:border-box;
+    height:100%;
+    max-width:480px;
+    margin:0 auto;
+    padding-inline:16px;
+    display:flex;flex-direction:column;
+    position:relative;
+  }
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding-block:14px 8px;flex:none;
+  }
+  .logo{font-family:"Comfortaa",ui-rounded,sans-serif;font-weight:700;font-size:20px;display:flex;align-items:center;gap:9px;}
+  .mark{width:20px;height:20px;flex:none;}
+  .iconbtn{
+    border:0;background:var(--sunk);color:var(--ink-soft);
+    width:38px;height:38px;border-radius:50%;display:grid;place-items:center;cursor:pointer;
+    transition:transform .18s ease, background .18s ease;
+  }
+  .iconbtn:hover{background:var(--line);color:var(--ink);transform:rotate(30deg);}
+  .iconbtn[hidden]{display:none!important;}
+
+  .view{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;padding-bottom:calc(30px + env(safe-area-inset-bottom,0px));}
+  .view[hidden]{display:none!important;}
+
+  h2.title{font-family:"Comfortaa",ui-rounded,sans-serif;font-weight:700;font-size:23px;margin:0;text-wrap:balance;}
+  .sub{margin:0;color:var(--ink-soft);font-size:15px;line-height:1.45;text-wrap:balance;}
+  .eyebrow{font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--ink-soft);margin:0;}
+
+  .btn{
+    font-family:inherit;font-size:17px;font-weight:800;color:var(--ink);
+    border:0;border-radius:22px;padding:17px 18px;cursor:pointer;width:100%;box-sizing:border-box;
+    display:flex;align-items:center;justify-content:center;gap:10px;line-height:1.15;text-align:center;
+    transition:transform .16s ease, filter .16s ease;
+  }
+  .btn:active{transform:scale(.975);}
+  .btn:focus-visible{outline:3px solid var(--ink);outline-offset:3px;}
+  .b-left{background:var(--lav);color:var(--on-lav);}
+  .b-right{background:var(--rose);color:var(--on-rose);}
+  .b-left-o{background:var(--lav-soft);color:var(--lav-ink);}
+  .b-right-o{background:var(--rose-soft);color:var(--rose-ink);}
+  .b-quiet{background:var(--sunk);color:var(--ink-soft);font-size:15px;padding:14px 18px;}
+  .linkbtn{
+    background:none;border:0;font-family:inherit;font-size:15px;font-weight:700;color:var(--ink-soft);
+    cursor:pointer;padding:10px;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:4px;
+  }
+  .linkbtn:hover{color:var(--ink);}
+  .stack{display:flex;flex-direction:column;gap:10px;}
+  .spacer{margin-top:auto;}
+  .actions{margin-top:16px;padding-bottom:10px;}
+  .pad.top{justify-content:flex-start;padding-top:4px;gap:12px;flex:none;}
+
+  /* auth + setup */
+  .pad{display:flex;flex-direction:column;gap:14px;justify-content:flex-start;flex:none;padding-top:6px;}
+  .center{align-items:center;text-align:center;}
+  .bottle{width:92px;height:92px;flex:none;}
+  .inp{display:flex;flex-direction:column;gap:6px;}
+  .inp label{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);padding-left:4px;}
+  .inp input{
+    font-family:inherit;font-size:16px;font-weight:600;color:var(--ink);width:100%;box-sizing:border-box;
+    background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:14px 16px;
+  }
+  .inp input:focus{outline:none;border-color:var(--rose);}
+  .inp.bad input{border-color:var(--rose);background:var(--rose-soft);}
+  .err{font-size:12.5px;font-weight:700;color:var(--rose-ink);padding-left:4px;margin:0;}
+  .err[hidden]{display:none!important;}
+  .fine{font-size:11.5px;color:var(--ink-soft);text-align:center;line-height:1.5;margin:0;}
+
+  /* home */
+  .ring-wrap{position:relative;width:min(200px,50vw);aspect-ratio:1;margin:0 auto 4px;flex:none;}
+  .ring-wrap svg{width:100%;height:100%;transform:rotate(-90deg);}
+  .ring-track{fill:none;stroke:var(--sunk);stroke-width:16;}
+  .ring-prog{fill:none;stroke:var(--rose);stroke-width:16;stroke-linecap:round;transition:stroke-dashoffset .6s ease, stroke .4s ease;}
+  .ring-in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;}
+  .ring-in .cap{font-size:12px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-soft);}
+  .ring-in .big{font-family:"Comfortaa",ui-rounded,sans-serif;font-weight:700;font-size:37px;font-variant-numeric:tabular-nums;line-height:1.05;}
+  .ring-in .note{font-size:13px;color:var(--ink-soft);font-weight:600;}
+  .lastcard{
+    background:var(--card);border:1px solid var(--line);border-radius:20px;padding:13px 15px;
+    display:flex;align-items:center;gap:11px;
+  }
+  .lastcard .txt{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .lastcard b{font-size:15px;font-weight:800;}
+  .lastcard span{font-size:13px;color:var(--ink-soft);}
+  .lastcard .badge{margin-left:auto;font-size:12px;font-weight:800;padding:6px 11px;border-radius:12px;background:var(--sunk);color:var(--ink-soft);white-space:nowrap;}
+  .dot{width:11px;height:11px;border-radius:50%;flex:none;}
+  .d-left{background:var(--lav);}
+  .d-right{background:var(--rose);}
+  .btn .dot{background:currentColor;opacity:.45;}
+  .log{display:flex;flex-direction:column;gap:7px;margin-top:18px;}
+  .log h3{margin:0 0 2px;font-size:12px;font-weight:800;color:var(--ink-soft);letter-spacing:.6px;text-transform:uppercase;}
+  .logrow{display:flex;align-items:center;gap:10px;font-size:14px;padding:9px 12px;border-radius:15px;background:var(--sunk);}
+  .logrow time{font-weight:800;font-variant-numeric:tabular-nums;}
+  .logrow span{color:var(--ink-soft);}
+  .logrow em{margin-left:auto;font-style:normal;color:var(--ink-soft);font-size:13px;}
+  .empty{font-size:13.5px;color:var(--ink-soft);padding:10px 2px;}
+  .twin{display:flex;gap:10px;}
+  .twin .btn{flex:1;flex-direction:column;gap:5px;font-size:17px;padding:18px 8px;}
+  .twin small{font-size:11px;font-weight:800;letter-spacing:.6px;opacity:.75;text-transform:uppercase;}
+
+  /* feeding */
+  .pulse{width:min(182px,48vw);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;background:var(--lav-soft);animation:breathe 4.5s ease-in-out infinite;margin:0 auto;}
+  .pulse.right{background:var(--rose-soft);}
+  .pulse .clock{font-family:"Comfortaa",ui-rounded,sans-serif;font-weight:700;font-size:38px;font-variant-numeric:tabular-nums;}
+  @keyframes breathe{0%,100%{transform:scale(1);}50%{transform:scale(1.045);}}
+  @media (prefers-reduced-motion: reduce){.pulse{animation:none;}}
+
+  /* settings */
+  .field{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px 15px;display:flex;flex-direction:column;gap:10px;}
+  .field .lab{font-size:14px;font-weight:800;}
+  .field .help{font-size:12.5px;color:var(--ink-soft);line-height:1.4;}
+  .seg{display:flex;gap:8px;}
+  .seg button{
+    flex:1;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;
+    border:1.6px solid transparent;background:var(--sunk);color:var(--ink-soft);
+    border-radius:16px;padding:12px 6px;display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .seg button[aria-pressed="true"]{background:var(--rose-soft);color:var(--rose-ink);border-color:var(--rose);}
+  .sw-girl{width:12px;height:12px;border-radius:50%;background:#E78FA6;box-shadow:0 0 0 2px #A79EE4 inset;}
+  .sw-boy{width:12px;height:12px;border-radius:50%;background:#E9C69A;box-shadow:0 0 0 2px #7FC8C6 inset;}
+  .stepper{display:flex;align-items:center;gap:12px;}
+  .stepper button{width:42px;height:42px;border-radius:14px;border:0;background:var(--sunk);color:var(--ink);font-size:22px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1;}
+  .stepper .val{flex:1;text-align:center;font-family:"Comfortaa",ui-rounded,sans-serif;font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .stepper .val small{display:block;font-family:"Nunito",sans-serif;font-size:11px;font-weight:800;color:var(--ink-soft);letter-spacing:.6px;}
+  .switchrow{display:flex;align-items:center;gap:12px;}
+  .switchrow .lab{flex:1;}
+  .switch{appearance:none;width:52px;height:30px;border-radius:15px;background:var(--sunk);position:relative;cursor:pointer;flex:none;border:0;transition:background .2s ease;}
+  .switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--card);transition:transform .2s ease;}
+  .switch:checked{background:var(--mint);}
+  .switch:checked::after{transform:translateX(22px);}
+  .timerow{display:flex;align-items:center;gap:8px;}
+  .timerow span{font-size:14px;color:var(--ink-soft);font-weight:700;}
+  .timerow input{flex:1;font-family:"Comfortaa",ui-rounded,sans-serif;font-size:16px;font-weight:700;color:var(--ink);background:var(--sunk);border:0;border-radius:14px;padding:11px 10px;text-align:center;}
+  .b-danger{background:rgba(231,143,166,.14);color:var(--rose-ink);border:1.5px solid var(--rose);font-size:15px;padding:13px 18px;}
+  .b-danger.armed{background:var(--rose);color:var(--on-rose);border-color:var(--rose);}
+  .doclink{
+    display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:700;
+    color:var(--lav-ink);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:4px;
+  }
+  .acct{display:flex;align-items:center;gap:10px;}
+  .acct .mail{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .acct button{margin-left:auto;flex:none;width:auto;padding:9px 14px;font-size:13px;border-radius:14px;}
+
+  /* overlay */
+  .overlay{position:fixed;inset:0;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center;padding:16px;z-index:9;}
+  .overlay[hidden]{display:none!important;}
+  .notif{
+    width:100%;max-width:448px;background:var(--card);border-radius:28px;padding:22px 18px;
+    display:flex;flex-direction:column;gap:11px;align-items:center;text-align:center;
+    margin-bottom:env(safe-area-inset-bottom, 0px);
+    animation:rise .3s cubic-bezier(.2,.8,.3,1);
+  }
+  @keyframes rise{from{transform:translateY(22px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  @media (prefers-reduced-motion: reduce){.notif{animation:none;}}
+  .notif .face{width:62px;height:62px;}
+  .notif h2{font-family:"Comfortaa",ui-rounded,sans-serif;font-weight:700;font-size:21px;margin:0;text-wrap:balance;}
+  .which{font-size:14px;font-weight:800;padding:7px 14px;border-radius:14px;display:inline-flex;align-items:center;gap:8px;}
+
+  .toast{
+    position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom, 0px));transform:translate(-50%,14px);
+    background:var(--ink);color:var(--milk);font-size:14px;font-weight:700;padding:11px 18px;border-radius:16px;
+    opacity:0;pointer-events:none;transition:opacity .25s ease, transform .25s ease;z-index:20;white-space:nowrap;max-width:90vw;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0);}
+</style>
+
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="logo">
+      <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M32 1c3.3 0 5.5 2.9 5.5 6.9V12.6h-11V7.9C26.5 3.9 28.7 1 32 1Z" fill="var(--lav)"/>
+        <rect x="23" y="12" width="18" height="7" rx="3.5" fill="var(--lav)"/>
+        <clipPath id="bt"><path d="M28 19h8a9 9 0 0 1 9 9v23a9 9 0 0 1-9 9h-8a9 9 0 0 1-9-9V28a9 9 0 0 1 9-9Z"/></clipPath>
+        <rect x="19" y="34" width="26" height="27" fill="var(--rose)" opacity=".5" clip-path="url(#bt)"/>
+        <rect x="19" y="33.4" width="26" height="2.4" fill="var(--rose)" clip-path="url(#bt)"/>
+        <path d="M28 19h8a9 9 0 0 1 9 9v23a9 9 0 0 1-9 9h-8a9 9 0 0 1-9-9V28a9 9 0 0 1 9-9Z" fill="none" stroke="var(--rose)" stroke-width="3.4"/>
+        <path d="M24 27h6M24 31h4" stroke="var(--rose)" stroke-width="2.4" stroke-linecap="round"/>
+      </svg>
+      <span>Молочко</span>
+    </div>
+    <button class="iconbtn" id="gear" aria-label="Настройки" hidden>
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" d="M22.11 9.57 L22.11 14.43 L19.72 13.69 L18.65 16.26 L20.87 17.43 L17.43 20.87 L16.26 18.65 L13.69 19.72 L14.43 22.11 L9.57 22.11 L10.31 19.72 L7.74 18.65 L6.57 20.87 L3.13 17.43 L5.35 16.26 L4.28 13.69 L1.89 14.43 L1.89 9.57 L4.28 10.31 L5.35 7.74 L3.13 6.57 L6.57 3.13 L7.74 5.35 L10.31 4.28 L9.57 1.89 L14.43 1.89 L13.69 4.28 L16.26 5.35 L17.43 3.13 L20.87 6.57 L18.65 7.74 L19.72 10.31 Z M15.6 12 A3.6 3.6 0 1 0 8.4 12 A3.6 3.6 0 1 0 15.6 12 Z"/></svg>
+    </button>
+  </header>
+
+  <!-- ЛИСТ 1 — регистрация (только при первом запуске) -->
+  <section class="view" id="v-auth" hidden>
+    <div class="pad center">
+      <svg class="bottle" viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M32 1c3.3 0 5.5 2.9 5.5 6.9V12.6h-11V7.9C26.5 3.9 28.7 1 32 1Z" fill="var(--lav)"/>
+        <rect x="23" y="12" width="18" height="7" rx="3.5" fill="var(--lav)"/>
+        <clipPath id="bt2"><path d="M28 19h8a9 9 0 0 1 9 9v23a9 9 0 0 1-9 9h-8a9 9 0 0 1-9-9V28a9 9 0 0 1 9-9Z"/></clipPath>
+        <rect x="19" y="34" width="26" height="27" fill="var(--rose)" opacity=".5" clip-path="url(#bt2)"/>
+        <rect x="19" y="33.4" width="26" height="2.4" fill="var(--rose)" clip-path="url(#bt2)"/>
+        <path d="M28 19h8a9 9 0 0 1 9 9v23a9 9 0 0 1-9 9h-8a9 9 0 0 1-9-9V28a9 9 0 0 1 9-9Z" fill="none" stroke="var(--rose)" stroke-width="3.4"/>
+        <path d="M24 27h6M24 31h4" stroke="var(--rose)" stroke-width="2.4" stroke-linecap="round"/>
+      </svg>
+      <h2 class="title" id="auth-title">Заведём аккаунт</h2>
+      <p class="sub" id="auth-sub">Кормления сохранятся, даже если телефон разрядится или потеряется.</p>
+      <div class="stack" style="width:100%;margin-top:6px">
+        <div class="inp" id="w-mail">
+          <label for="i-mail">Почта</label>
+          <input type="email" id="i-mail" placeholder="mama@pochta.ru" autocomplete="email" inputmode="email">
+        </div>
+        <div class="inp" id="w-pass">
+          <label for="i-pass">Пароль</label>
+          <input type="password" id="i-pass" placeholder="не меньше 6 символов" autocomplete="new-password">
+        </div>
+        <p class="err" id="auth-err" hidden></p>
+        <button class="btn b-right" id="auth-go">Создать аккаунт</button>
+        <button class="btn b-quiet" id="auth-bio" hidden>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M12 3.5c-2 0-3.8.7-5.2 1.9M19.2 7.6A8.5 8.5 0 0 0 16.5 4.7"/><path d="M4.2 8.6A8.5 8.5 0 0 0 3.5 12v2.4M20.5 12v3.4c0 1.2-.2 2.3-.6 3.4"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0v3c0 1.4-.2 2.7-.7 4"/><path d="M12 12v3.5c0 1.6-.3 3.1-.9 4.5"/><path d="M7.6 17.6c-.4 1-.9 1.8-1.6 2.6"/></svg>
+          Войти по отпечатку
+        </button>
+        <p class="fine" id="auth-fine">Продолжая, вы соглашаетесь с <a class="doclink" href="privacy.html" target="_blank" rel="noopener" style="font-size:11.5px">политикой конфиденциальности</a>. Рекламы нет, данные третьим лицам не передаём.</p>
+      </div>
+    </div>
+    <div class="stack actions" style="align-items:center">
+      <button class="linkbtn" id="auth-swap">Уже есть аккаунт? Войти</button>
+      <button class="linkbtn" id="auth-skip">Позже — сейчас надо кормить</button>
+    </div>
+  </section>
+
+  <!-- ЛИСТ 2 — первичные настройки -->
+  <section class="view" id="v-setup" hidden>
+    <div class="stack" style="gap:13px;padding-top:6px">
+      <div>
+        <p class="eyebrow">Шаг 2 из 2</p>
+        <h2 class="title">Настроим под малыша</h2>
+        <p class="sub" style="margin-top:6px">Эти параметры потом можно менять в любой момент.</p>
+      </div>
+      <div class="field">
+        <span class="lab">Кто у нас растёт</span>
+        <div class="seg" id="s-baby">
+          <button type="button" data-baby="girl" aria-pressed="true"><span class="sw-girl"></span>Девочка</button>
+          <button type="button" data-baby="boy" aria-pressed="false"><span class="sw-boy"></span>Мальчик</button>
+        </div>
+        <span class="help">Меняет цвета приложения.</span>
+      </div>
+      <div class="field">
+        <span class="lab">Интервал кормления</span>
+        <div class="stepper">
+          <button type="button" data-step="interval:-15" aria-label="Уменьшить">−</button>
+          <span class="val"><span class="v-interval">180</span><small>МИНУТ</small></span>
+          <button type="button" data-step="interval:15" aria-label="Увеличить">+</button>
+        </div>
+        <span class="help v-interval-help">Это 3 ч 0 мин между кормлениями.</span>
+      </div>
+      <div class="field">
+        <div class="switchrow">
+          <span class="lab">Напоминать об окончании</span>
+          <input type="checkbox" class="switch v-remind" checked>
+        </div>
+        <div class="stepper v-durblock">
+          <button type="button" data-step="duration:-5" aria-label="Уменьшить">−</button>
+          <span class="val"><span class="v-duration">30</span><small>МИНУТ КОРМЛЕНИЯ</small></span>
+          <button type="button" data-step="duration:5" aria-label="Увеличить">+</button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="lab">Время напоминаний</span>
+        <div class="timerow">
+          <span>с</span><input type="time" class="v-from" value="06:00">
+          <span>до</span><input type="time" class="v-to" value="23:59">
+        </div>
+      </div>
+    </div>
+    <div class="stack actions">
+      <button class="btn b-right" id="setup-done">Готово, начинаем</button>
+    </div>
+  </section>
+
+  <!-- ЛИСТ 3 — главная -->
+  <section class="view" id="v-home" hidden>
+    <div class="ring-wrap">
+      <svg viewBox="0 0 236 236" aria-hidden="true">
+        <circle class="ring-track" cx="118" cy="118" r="102"/>
+        <circle class="ring-prog" id="ring" cx="118" cy="118" r="102"/>
+      </svg>
+      <div class="ring-in">
+        <span class="cap" id="ring-cap">Покушаем через</span>
+        <span class="big" id="countdown">3:00</span>
+        <span class="note" id="next-at"></span>
+      </div>
+    </div>
+    <div class="lastcard" id="lastcard">
+      <span class="dot d-left" id="last-dot"></span>
+      <div class="txt">
+        <b id="last-main">Ещё не кормились</b>
+        <span id="last-sub">Нажмите кнопку ниже, когда начнём</span>
+      </div>
+      <span class="badge" id="last-dur" hidden></span>
+    </div>
+    <div class="stack actions">
+      <p class="eyebrow" style="text-align:center" id="advice">Начать кормление</p>
+      <div class="twin">
+        <button class="btn" id="go-left" data-side="left">Левой<small>грудью</small></button>
+        <button class="btn" id="go-right" data-side="right">Правой<small>грудью</small></button>
+      </div>
+    </div>
+    <div class="log">
+      <h3>Сегодня</h3>
+      <div id="log-list"></div>
+    </div>
+  </section>
+
+  <!-- ЛИСТ 4 — кормление -->
+  <section class="view" id="v-feed" hidden>
+    <div class="pad top center">
+      <p class="eyebrow">Кормимся</p>
+      <div class="pulse" id="pulse"><span class="clock" id="feed-clock">00:00</span></div>
+      <h2 class="title" id="feed-side">Левой грудью</h2>
+      <p class="sub" id="feed-hint" style="max-width:28ch"></p>
+    </div>
+    <div class="stack actions">
+      <button class="btn" id="feed-done">Покормили</button>
+      <button class="linkbtn" id="feed-cancel">Отменить — это случайно</button>
+    </div>
+  </section>
+
+  <!-- ЛИСТ 5 — настройки -->
+  <section class="view" id="v-settings" hidden>
+    <div class="stack" style="gap:13px;padding-top:6px">
+      <h2 class="title">Настройки</h2>
+      <div class="field">
+        <span class="lab">Аккаунт</span>
+        <div class="acct">
+          <span class="dot d-right"></span>
+          <span class="mail" id="acct-mail">Без аккаунта</span>
+          <button class="btn b-quiet" id="acct-btn">Войти</button>
+        </div>
+        <span class="help" id="acct-help"></span>
+      </div>
+      <div class="field">
+        <span class="lab">Кто у нас растёт</span>
+        <div class="seg" id="s-baby2">
+          <button type="button" data-baby="girl" aria-pressed="true"><span class="sw-girl"></span>Девочка</button>
+          <button type="button" data-baby="boy" aria-pressed="false"><span class="sw-boy"></span>Мальчик</button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="lab">Интервал кормления</span>
+        <div class="stepper">
+          <button type="button" data-step="interval:-15" aria-label="Уменьшить">−</button>
+          <span class="val"><span class="v-interval">180</span><small>МИНУТ</small></span>
+          <button type="button" data-step="interval:15" aria-label="Увеличить">+</button>
+        </div>
+        <span class="help v-interval-help"></span>
+      </div>
+      <div class="field">
+        <div class="switchrow">
+          <span class="lab">Напоминать об окончании</span>
+          <input type="checkbox" class="switch v-remind">
+        </div>
+        <div class="stepper v-durblock">
+          <button type="button" data-step="duration:-5" aria-label="Уменьшить">−</button>
+          <span class="val"><span class="v-duration">30</span><small>МИНУТ КОРМЛЕНИЯ</small></span>
+          <button type="button" data-step="duration:5" aria-label="Увеличить">+</button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="lab">Время напоминаний</span>
+        <div class="timerow">
+          <span>с</span><input type="time" class="v-from">
+          <span>до</span><input type="time" class="v-to">
+        </div>
+        <span class="help">Ночью — только тихое напоминание, без звука.</span>
+      </div>
+      <div class="field">
+        <div class="switchrow">
+          <span class="lab">Вход по отпечатку или Face ID</span>
+          <input type="checkbox" class="switch" id="bio-sw">
+        </div>
+        <span class="help" id="bio-help">Приложение будет спрашивать отпечаток вместо пароля.</span>
+      </div>
+
+      <div class="field">
+        <span class="lab">Выход</span>
+        <button class="btn b-quiet" id="lock">Выйти из приложения</button>
+        <span class="help">При следующем запуске попросим пароль или отпечаток. Дневник останется на месте.</span>
+      </div>
+
+      <div class="field">
+        <span class="lab">Дневник</span>
+        <button class="btn b-quiet" id="wipe">Очистить историю кормлений</button>
+        <span class="help">Удалит все записи на этом телефоне. Настройки останутся.</span>
+      </div>
+
+      <div class="field">
+        <span class="lab">Удаление аккаунта</span>
+        <button class="btn b-danger" id="kill">Удалить аккаунт и все данные</button>
+        <span class="help" id="kill-help">Сотрёт аккаунт, дневник и настройки без возможности восстановить. Приложение вернётся к первому запуску.</span>
+      </div>
+
+      <div class="field">
+        <span class="lab">О приложении</span>
+        <a class="doclink" id="privacy-link" href="privacy.html" target="_blank" rel="noopener">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4.5 6v6c0 4.5 3.2 7.9 7.5 9 4.3-1.1 7.5-4.5 7.5-9V6L12 3Z"/><path d="M9.3 12.2l1.9 1.9 3.6-3.9"/></svg>
+          Политика конфиденциальности
+        </a>
+        <span class="help">Данные остаются на этом телефоне: ни рекламы, ни аналитики, ни передачи третьим лицам. Версия 1.0.0</span>
+      </div>
+    </div>
+    <div class="stack actions">
+      <button class="btn b-right" id="set-back">Готово</button>
+    </div>
+  </section>
+
+  <div class="overlay" id="overlay" hidden>
+    <div class="notif">
+      <svg class="face" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r="30" fill="var(--butter)"/>
+        <circle cx="23" cy="28" r="3.2" fill="#3A2B33"/>
+        <circle cx="41" cy="28" r="3.2" fill="#3A2B33"/>
+        <path d="M24 40c3 3.6 13 3.6 16 0" stroke="#3A2B33" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <circle cx="14" cy="36" r="5" fill="var(--rose)" opacity=".5"/>
+        <circle cx="50" cy="36" r="5" fill="var(--rose)" opacity=".5"/>
+      </svg>
+      <h2 id="n-title">Мамочка, я хочу кушать!</h2>
+      <span class="which" id="n-which"></span>
+      <button class="btn" id="n-start">Начать</button>
+      <button class="btn b-quiet" id="n-snooze">Отложить на 10 минут</button>
+      <button class="linkbtn" id="n-swap"></button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+(function(){
+  var KEY = 'molochko.v1';
+  var $ = function(id){ return document.getElementById(id); };
+  var all = function(sel){ return Array.prototype.slice.call(document.querySelectorAll(sel)); };
+
+  var DEF = {
+    account:null, passHash:null, skipped:false, onboarded:false, locked:false, bioId:null,
+    baby:'girl', interval:180, duration:30, remindEnd:true,
+    from:'06:00', to:'23:59',
+    lastSide:null, lastAt:null, snoozeUntil:null,
+    feedSide:null, feedStart:null,
+    log:[]
+  };
+  var S = load();
+
+  function load(){
+    var s = {};
+    for(var k in DEF) s[k] = DEF[k];
+    try{
+      var raw = localStorage.getItem(KEY);
+      if(raw){
+        var got = JSON.parse(raw);
+        for(var k2 in DEF) if(got[k2] !== undefined) s[k2] = got[k2];
+      }
+    }catch(e){}
+    return s;
+  }
+  function save(){
+    try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){}
+  }
+
+  /* ---------- утилиты ---------- */
+  function pad(n){ return (n<10?'0':'') + n; }
+  function hm(ts){ var d = new Date(ts); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function hhmm(min){ return Math.floor(min/60) + ' ч ' + (min%60) + ' мин'; }
+  function other(s){ return s === 'left' ? 'right' : 'left'; }
+  function word(s, f){
+    if(f === 'instr') return s === 'left' ? 'левой грудью' : 'правой грудью';
+    if(f === 'gen') return s === 'left' ? 'из левой груди' : 'из правой груди';
+    return s === 'left' ? 'Левой' : 'Правой';
+  }
+  function sameDay(ts){
+    var a = new Date(ts), b = new Date();
+    return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+  }
+  function toast(msg){
+    var t = $('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(t._h); t._h = setTimeout(function(){ t.classList.remove('show'); }, 2100);
+  }
+
+  /* ---------- пароль и биометрия ---------- */
+  function sha256(text){
+    if(!(window.crypto && crypto.subtle)) return Promise.resolve('plain:' + text);
+    var data = new TextEncoder().encode('molochko:' + text);
+    return crypto.subtle.digest('SHA-256', data).then(function(buf){
+      return Array.prototype.map.call(new Uint8Array(buf), function(b){ return ('0' + b.toString(16)).slice(-2); }).join('');
+    });
+  }
+  function b64(buf){
+    var bin = '', arr = new Uint8Array(buf);
+    for(var i = 0; i < arr.length; i++) bin += String.fromCharCode(arr[i]);
+    return btoa(bin);
+  }
+  function unb64(str){
+    var bin = atob(str), arr = new Uint8Array(bin.length);
+    for(var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return arr;
+  }
+  function rand(n){ var a = new Uint8Array(n); (crypto.getRandomValues ? crypto : window.msCrypto).getRandomValues(a); return a; }
+
+  function bioSupported(){
+    try{
+      if(!window.PublicKeyCredential || !navigator.credentials) return Promise.resolve(false);
+      return PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(function(){ return false; });
+    }catch(e){ return Promise.resolve(false); }
+  }
+  function bioEnroll(){
+    return navigator.credentials.create({ publicKey: {
+      challenge: rand(32),
+      rp: { name: 'Молочко' },
+      user: { id: rand(16), name: S.account || 'mama', displayName: 'Мама' },
+      pubKeyCredParams: [{ type:'public-key', alg:-7 }, { type:'public-key', alg:-257 }],
+      authenticatorSelection: { authenticatorAttachment:'platform', userVerification:'required', residentKey:'preferred' },
+      timeout: 60000, attestation: 'none'
+    }}).then(function(cred){ S.bioId = b64(cred.rawId); save(); return true; });
+  }
+  function bioVerify(){
+    if(!S.bioId) return Promise.reject();
+    return navigator.credentials.get({ publicKey: {
+      challenge: rand(32),
+      allowCredentials: [{ type:'public-key', id: unb64(S.bioId) }],
+      userVerification: 'required', timeout: 60000
+    }}).then(function(){ return true; });
+  }
+
+  /* ---------- листы ---------- */
+  var VIEWS = { auth:'v-auth', setup:'v-setup', home:'v-home', feed:'v-feed', settings:'v-settings' };
+  var current = null;
+  function show(name){
+    for(var k in VIEWS) $(VIEWS[k]).hidden = (k !== name);
+    $('gear').hidden = (name !== 'home');
+    current = name;
+    var v = $(VIEWS[name]); if(v) v.scrollTop = 0;
+  }
+
+  /* ---------- настройки (общие поля на двух листах) ---------- */
+  function paintSettings(){
+    all('.v-interval').forEach(function(e){ e.textContent = S.interval; });
+    all('.v-interval-help').forEach(function(e){ e.textContent = 'Это ' + hhmm(S.interval) + ' между кормлениями.'; });
+    all('.v-duration').forEach(function(e){ e.textContent = S.duration; });
+    all('.v-remind').forEach(function(e){ e.checked = S.remindEnd; });
+    all('.v-durblock').forEach(function(e){
+      e.style.opacity = S.remindEnd ? '1' : '.4';
+      e.style.pointerEvents = S.remindEnd ? 'auto' : 'none';
+    });
+    all('.v-from').forEach(function(e){ e.value = S.from; });
+    all('.v-to').forEach(function(e){ e.value = S.to; });
+    all('#s-baby button, #s-baby2 button').forEach(function(b){
+      b.setAttribute('aria-pressed', b.dataset.baby === S.baby ? 'true' : 'false');
+    });
+    document.body.setAttribute('data-baby', S.baby);
+    $('acct-mail').textContent = S.account ? S.account : 'Без аккаунта';
+    $('acct-btn').textContent = S.account ? 'Выйти' : 'Войти';
+    $('acct-help').textContent = S.account
+      ? 'Дневник привязан к аккаунту.'
+      : 'Без аккаунта дневник хранится только на этом телефоне.';
+  }
+
+  all('[data-step]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var p = b.dataset.step.split(':'), k = p[0], d = parseInt(p[1], 10);
+      if(k === 'interval') S.interval = Math.min(360, Math.max(60, S.interval + d));
+      if(k === 'duration') S.duration = Math.min(90, Math.max(5, S.duration + d));
+      save(); paintSettings(); if(current === 'home') paintHome();
+    });
+  });
+  all('.v-remind').forEach(function(e){
+    e.addEventListener('change', function(){ S.remindEnd = this.checked; save(); paintSettings(); });
+  });
+  all('.v-from').forEach(function(e){ e.addEventListener('change', function(){ S.from = this.value || '06:00'; save(); }); });
+  all('.v-to').forEach(function(e){ e.addEventListener('change', function(){ S.to = this.value || '23:59'; save(); }); });
+  all('#s-baby button, #s-baby2 button').forEach(function(b){
+    b.addEventListener('click', function(){
+      if(S.baby === b.dataset.baby) return;
+      S.baby = b.dataset.baby; save(); paintSettings();
+      toast(S.baby === 'boy' ? 'Ночная синяя гамма' : 'Розовая гамма');
+    });
+  });
+
+  /* ---------- лист 1: регистрация ---------- */
+  var mode = 'signup';
+  function paintAuth(){
+    var s = mode === 'signup';
+    var locked = S.locked && !!S.account;
+    $('auth-title').textContent = s ? 'Заведём аккаунт' : (locked ? 'С возвращением' : 'Вход');
+    $('auth-sub').textContent = s
+      ? 'Кормления сохранятся, даже если телефон разрядится или потеряется.'
+      : (locked ? 'Дневник на месте — нужен только пароль.' : 'Войдите — и дневник кормлений вернётся на место.');
+    $('auth-go').textContent = s ? 'Создать аккаунт' : 'Войти';
+    $('auth-swap').textContent = s ? 'Уже есть аккаунт? Войти' : 'Ещё нет аккаунта? Создать';
+    $('auth-swap').hidden = locked;
+    $('i-pass').placeholder = s ? 'не меньше 6 символов' : 'ваш пароль';
+    $('auth-fine').hidden = !s;
+    $('auth-skip').hidden = !!S.account;
+    if(locked && S.account) $('i-mail').value = S.account;
+    $('auth-bio').hidden = !(locked && S.bioId);
+    clearErr();
+  }
+  function clearErr(){
+    $('auth-err').hidden = true;
+    $('w-mail').classList.remove('bad'); $('w-pass').classList.remove('bad');
+  }
+  function err(field, msg){
+    $('auth-err').textContent = msg; $('auth-err').hidden = false;
+    $(field === 'mail' ? 'w-mail' : 'w-pass').classList.add('bad');
+    $(field === 'mail' ? 'i-mail' : 'i-pass').focus();
+  }
+  $('i-mail').addEventListener('input', clearErr);
+  $('i-pass').addEventListener('input', clearErr);
+  $('auth-swap').addEventListener('click', function(){ mode = mode === 'signup' ? 'login' : 'signup'; paintAuth(); });
+  $('auth-skip').addEventListener('click', function(){ S.skipped = true; save(); afterAuth(); });
+  $('auth-go').addEventListener('click', function(){
+    var mail = $('i-mail').value.trim(), pass = $('i-pass').value;
+    if(mail.indexOf('@') < 1 || mail.indexOf('.', mail.indexOf('@')) < 0){ err('mail', 'Проверьте почту — кажется, там опечатка.'); return; }
+    if(mode === 'signup' && pass.length < 6){ err('pass', 'Пусть в пароле будет хотя бы 6 символов.'); return; }
+    if(mode === 'login' && !pass.length){ err('pass', 'Введите пароль.'); return; }
+
+    if(mode === 'login' && S.account && S.passHash){
+      if(mail.toLowerCase() !== S.account.toLowerCase()){
+        err('mail', 'Этот телефон помнит другую почту: ' + S.account);
+        return;
+      }
+      sha256(pass).then(function(h){
+        if(h !== S.passHash){ err('pass', 'Пароль не подошёл. Попробуйте ещё раз.'); return; }
+        $('i-pass').value = '';
+        unlock('С возвращением!');
+      });
+      return;
+    }
+
+    sha256(pass).then(function(h){
+      S.account = mail; S.passHash = h; S.skipped = false; S.locked = false; save();
+      $('i-pass').value = '';
+      toast(mode === 'signup' ? 'Аккаунт создан' : 'С возвращением!');
+      afterAuth();
+    });
+  });
+
+  function unlock(msg){
+    S.locked = false; save();
+    toast(msg);
+    afterAuth();
+  }
+
+  $('auth-bio').addEventListener('click', function(){
+    var btn = this;
+    btn.disabled = true;
+    bioVerify().then(function(){ btn.disabled = false; unlock('С возвращением!'); })
+      .catch(function(){ btn.disabled = false; err('pass', 'Не узнала отпечаток. Войдите паролем.'); });
+  });
+  function afterAuth(){
+    if(S.onboarded){ paintHome(); show('home'); }
+    else { paintSettings(); show('setup'); }
+  }
+
+  /* ---------- лист 2: первичные настройки ---------- */
+  $('setup-done').addEventListener('click', function(){
+    S.onboarded = true; save();
+    paintHome(); show('home');
+    toast('Всё готово — можно кормить');
+  });
+
+  /* ---------- лист 3: главная ---------- */
+  function nextAt(){
+    if(S.snoozeUntil && S.snoozeUntil > Date.now()) return S.snoozeUntil;
+    if(!S.lastAt) return null;
+    return S.lastAt + S.interval * 60000;
+  }
+  function paintHome(){
+    var suggest = S.lastSide ? other(S.lastSide) : 'left';
+    $('go-left').className = 'btn ' + (suggest === 'left' ? 'b-left' : 'b-left-o');
+    $('go-right').className = 'btn ' + (suggest === 'right' ? 'b-right' : 'b-right-o');
+    $('advice').textContent = S.lastSide ? ('Следующая — ' + word(suggest, 'instr')) : 'Начать кормление';
+    $('ring').style.stroke = suggest === 'left' ? 'var(--lav)' : 'var(--rose)';
+
+    if(S.lastAt){
+      $('last-dot').className = 'dot d-' + S.lastSide;
+      $('last-main').textContent = 'Последний раз в ' + hm(S.lastAt);
+      $('last-sub').textContent = word(S.lastSide, 'gen');
+      var lastEntry = S.log[0];
+      $('last-dur').hidden = !lastEntry;
+      if(lastEntry) $('last-dur').textContent = lastEntry.dur + ' мин';
+    } else {
+      $('last-dot').className = 'dot d-left';
+      $('last-main').textContent = 'Ещё не кормились';
+      $('last-sub').textContent = 'Нажмите кнопку ниже, когда начнём';
+      $('last-dur').hidden = true;
+    }
+
+    var today = S.log.filter(function(e){ return sameDay(e.at); });
+    $('log-list').innerHTML = today.length
+      ? today.slice(0, 6).map(function(e){
+          return '<div class="logrow"><span class="dot d-' + e.side + '"></span><time>' + hm(e.at) +
+                 '</time><span>' + word(e.side, 'instr') + '</span><em>' + e.dur + ' мин</em></div>';
+        }).join('')
+      : '<p class="empty">Сегодня записей пока нет.</p>';
+
+    paintCountdown();
+  }
+  function paintCountdown(){
+    var C = 2 * Math.PI * 102, na = nextAt();
+    if(!na){
+      $('ring-cap').textContent = 'Первое кормление';
+      $('countdown').textContent = '—';
+      $('next-at').textContent = 'таймер запустится после него';
+      $('ring').setAttribute('stroke-dasharray', C.toFixed(1));
+      $('ring').setAttribute('stroke-dashoffset', C.toFixed(1));
+      return;
+    }
+    var left = Math.max(0, Math.round((na - Date.now()) / 1000));
+    var h = Math.floor(left / 3600), m = Math.floor((left % 3600) / 60), s = left % 60;
+    $('ring-cap').textContent = left > 0 ? 'Покушаем через' : 'Уже пора';
+    $('countdown').textContent = left >= 3600 ? (h + ':' + pad(m)) : (m + ':' + pad(s));
+    $('next-at').textContent = left > 0 ? ('в ' + hm(na)) : 'малыш ждёт';
+    var total = (S.snoozeUntil && S.snoozeUntil > Date.now()) ? 10 * 60 : S.interval * 60;
+    var frac = Math.min(1, Math.max(0, left / total));
+    $('ring').setAttribute('stroke-dasharray', C.toFixed(1));
+    $('ring').setAttribute('stroke-dashoffset', (C * (1 - frac)).toFixed(1));
+  }
+  $('go-left').addEventListener('click', function(){ startFeed('left'); });
+  $('go-right').addEventListener('click', function(){ startFeed('right'); });
+  $('gear').addEventListener('click', function(){ paintSettings(); show('settings'); });
+
+  /* ---------- лист 4: кормление ---------- */
+  function startFeed(side){
+    S.feedSide = side; S.feedStart = Date.now(); S.snoozeUntil = null; save();
+    $('overlay').hidden = true;
+    paintFeed(); show('feed');
+  }
+  function paintFeed(){
+    var side = S.feedSide;
+    $('feed-side').textContent = word(side, 'short') + ' грудью';
+    $('pulse').className = 'pulse' + (side === 'right' ? ' right' : '');
+    $('feed-done').className = 'btn ' + (side === 'right' ? 'b-right' : 'b-left');
+    $('feed-hint').textContent = S.remindEnd
+      ? ('Напомню закончить через ' + S.duration + ' минут. Можно просто отложить телефон.')
+      : 'Считаю время. Можно просто отложить телефон.';
+    tickFeed();
+  }
+  function tickFeed(){
+    if(!S.feedStart) return;
+    var sec = Math.floor((Date.now() - S.feedStart) / 1000);
+    $('feed-clock').textContent = pad(Math.floor(sec / 60)) + ':' + pad(sec % 60);
+    if(S.remindEnd && sec === S.duration * 60) toast('Кормим уже ' + S.duration + ' минут');
+  }
+  $('feed-done').addEventListener('click', function(){
+    var mins = Math.max(1, Math.round((Date.now() - S.feedStart) / 60000));
+    S.lastSide = S.feedSide; S.lastAt = Date.now();
+    S.log.unshift({ at: S.lastAt, side: S.feedSide, dur: mins });
+    if(S.log.length > 200) S.log.length = 200;
+    S.feedSide = null; S.feedStart = null; S.snoozeUntil = null;
+    save(); paintHome(); show('home');
+    toast('Записала: ' + word(S.lastSide, 'instr') + ', ' + mins + ' мин');
+  });
+  $('feed-cancel').addEventListener('click', function(){
+    S.feedSide = null; S.feedStart = null; save();
+    paintHome(); show('home');
+  });
+
+  /* ---------- лист 5: настройки ---------- */
+  $('set-back').addEventListener('click', function(){ paintHome(); show('home'); });
+  $('acct-btn').addEventListener('click', function(){
+    if(S.account){ S.account = null; save(); paintSettings(); toast('Вышли из аккаунта'); }
+    else { mode = 'login'; paintAuth(); show('auth'); }
+  });
+  bioSupported().then(function(ok){
+    var row = $('bio-sw').closest('.field');
+    if(!ok){ row.hidden = true; return; }
+    $('bio-sw').checked = !!S.bioId;
+  });
+  $('bio-sw').addEventListener('change', function(){
+    var sw = this;
+    if(!sw.checked){ S.bioId = null; save(); $('bio-help').textContent = 'Вход по отпечатку выключен.'; return; }
+    if(!S.account){ sw.checked = false; toast('Сначала заведите аккаунт'); return; }
+    bioEnroll().then(function(){
+      $('bio-help').textContent = 'Готово — вход по отпечатку включён.';
+      toast('Отпечаток привязан');
+    }).catch(function(){
+      sw.checked = false;
+      toast('Не получилось привязать отпечаток');
+    });
+  });
+
+  $('lock').addEventListener('click', function(){
+    if(!S.account){ toast('Выход доступен с аккаунтом'); return; }
+    S.locked = true; save();
+    mode = 'login'; paintAuth(); show('auth');
+  });
+
+  var killArmed = false, killTimer = null;
+  $('kill').addEventListener('click', function(){
+    var btn = this;
+    if(!killArmed){
+      killArmed = true;
+      btn.classList.add('armed');
+      btn.textContent = 'Нажмите ещё раз — удалить навсегда';
+      $('kill-help').textContent = 'Отменится само через 5 секунд, если не нажимать.';
+      clearTimeout(killTimer);
+      killTimer = setTimeout(function(){
+        killArmed = false;
+        btn.classList.remove('armed');
+        btn.textContent = 'Удалить аккаунт и все данные';
+        $('kill-help').textContent = 'Сотрёт аккаунт, дневник и настройки без возможности восстановить. Приложение вернётся к первому запуску.';
+      }, 5000);
+      return;
+    }
+    clearTimeout(killTimer);
+    try{ localStorage.removeItem(KEY); }catch(e){}
+    for(var k in DEF) S[k] = (DEF[k] && DEF[k].constructor === Array) ? [] : DEF[k];
+    save();
+    killArmed = false;
+    btn.classList.remove('armed');
+    btn.textContent = 'Удалить аккаунт и все данные';
+    mode = 'signup';
+    paintSettings(); paintAuth(); paintHome();
+    show('auth');
+    toast('Аккаунт и все данные удалены');
+  });
+
+  $('wipe').addEventListener('click', function(){
+    if(!S.log.length){ toast('История и так пуста'); return; }
+    S.log = []; S.lastAt = null; S.lastSide = null; save();
+    paintHome(); toast('История очищена');
+  });
+
+  /* ---------- напоминание ---------- */
+  var CALLS = ['Мамочка, я хочу кушать!','Мама, покорми меня','Мамочка, пора кушать!','Мам, я уже проснулся и хочу молочка','Мамуля, я тебя жду'];
+  var lastCall = -1, notified = null;
+  function babyCall(){
+    var i = Math.floor(Math.random() * CALLS.length);
+    if(i === lastCall) i = (i + 1) % CALLS.length;
+    lastCall = i; return CALLS[i];
+  }
+  function quietOk(){
+    var d = new Date(), now = d.getHours() * 60 + d.getMinutes();
+    function mins(t){ var p = (t || '00:00').split(':'); return (+p[0]) * 60 + (+p[1]); }
+    var a = mins(S.from), b = mins(S.to);
+    return a <= b ? (now >= a && now <= b) : (now >= a || now <= b);
+  }
+  function openReminder(){
+    var side = S.lastSide ? other(S.lastSide) : 'left';
+    $('n-title').textContent = babyCall();
+    $('n-which').innerHTML = '<span class="dot d-' + side + '"></span>' + word(side, 'short') + ' грудью';
+    $('n-which').style.background = side === 'left' ? 'var(--lav-soft)' : 'var(--rose-soft)';
+    $('n-which').style.color = side === 'left' ? 'var(--lav-ink)' : 'var(--rose-ink)';
+    $('n-start').className = 'btn ' + (side === 'left' ? 'b-left' : 'b-right');
+    $('n-start').dataset.side = side;
+    $('n-swap').textContent = 'Покормить ' + word(other(side), 'instr');
+    $('n-swap').dataset.side = other(side);
+    $('overlay').hidden = false;
+  }
+  $('n-start').addEventListener('click', function(){ startFeed(this.dataset.side); });
+  $('n-swap').addEventListener('click', function(){ startFeed(this.dataset.side); });
+  $('n-snooze').addEventListener('click', function(){
+    S.snoozeUntil = Date.now() + 10 * 60000; save();
+    $('overlay').hidden = true; notified = null;
+    paintHome(); toast('Отложила на 10 минут');
+  });
+
+  /* ---------- пульс ---------- */
+  setInterval(function(){
+    if(S.feedStart){ tickFeed(); return; }
+    if(current === 'home') paintCountdown();
+    var na = nextAt();
+    if(na && Date.now() >= na && $('overlay').hidden && quietOk() && notified !== na){
+      notified = na;
+      if(current !== 'auth' && current !== 'setup'){ if(current !== 'home'){ paintHome(); show('home'); } openReminder(); }
+    }
+  }, 1000);
+
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden){ if(S.feedStart) tickFeed(); else if(current === 'home') paintCountdown(); }
+  });
+
+  /* ---------- старт ---------- */
+  paintSettings();
+  if(S.locked && S.account){ mode = 'login'; paintAuth(); show('auth'); }
+  else if(S.feedStart){ paintFeed(); show('feed'); }
+  else if(!S.onboarded && !S.account && !S.skipped){ paintAuth(); show('auth'); }
+  else if(!S.onboarded){ show('setup'); }
+  else { paintHome(); show('home'); }
+})();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
+</body>
+</html>

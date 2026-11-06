@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Политика конфиденциальности — Молочко</title>
+<meta name="theme-color" content="#241B27">
+<meta name="description" content="Политика конфиденциальности приложения «Молочко»: какие данные приложение хранит и почему они не покидают телефон.">
+<link rel="icon" href="favicon-32.png" sizes="32x32">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+  :root{
+    --page-a:#241B27; --page-b:#1D1B2B; --card:#342838; --sunk:#3D2F42;
+    --ink:#F7ECF0; --ink-soft:#B8A4B1; --line:#44344A; --rose:#E78FA6; --lav:#A79EE4;
+    color-scheme:dark;
+  }
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(70% 40% at 15% 0%, rgba(231,143,166,.18) 0%, transparent 60%),
+      radial-gradient(60% 35% at 95% 14%, rgba(167,158,228,.18) 0%, transparent 58%),
+      linear-gradient(170deg, var(--page-a), var(--page-b));
+    background-attachment:fixed;
+    color:var(--ink);
+    font-family:"Nunito", ui-rounded, system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.6;
+  }
+  .wrap{max-width:680px;margin:0 auto;padding-inline:20px;padding-block:36px 72px;}
+  .brand{display:flex;align-items:center;gap:10px;font-family:"Comfortaa",sans-serif;font-weight:700;font-size:21px;margin-bottom:28px;}
+  .brand svg{width:22px;height:22px;flex:none;}
+  h1{font-family:"Comfortaa",sans-serif;font-weight:700;font-size:28px;margin:0 0 6px;text-wrap:balance;}
+  .upd{color:var(--ink-soft);font-size:14px;font-weight:700;margin:0 0 28px;}
+  h2{font-family:"Comfortaa",sans-serif;font-weight:700;font-size:19px;margin:32px 0 10px;}
+  p{margin:0 0 14px;}
+  ul{margin:0 0 14px;padding-left:22px;}
+  li{margin-bottom:7px;}
+  .lead{
+    background:var(--card);border:1px solid var(--line);border-radius:20px;
+    padding:18px 20px;font-size:16px;font-weight:700;margin-bottom:8px;
+  }
+  .lead b{color:var(--rose);}
+  a{color:var(--lav);}
+  footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);color:var(--ink-soft);font-size:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <path d="M32 1c3.3 0 5.5 2.9 5.5 6.9V12.6h-11V7.9C26.5 3.9 28.7 1 32 1Z" fill="#A79EE4"/>
+      <rect x="23" y="12" width="18" height="7" rx="3.5" fill="#A79EE4"/>
+      <clipPath id="bt"><path d="M28 19h8a9 9 0 0 1 9 9v23a9 9 0 0 1-9 9h-8a9 9 0 0 1-9-9V28a9 9 0 0 1 9-9Z"/></clipPath>
+      <rect x="19" y="34" width="26" height="27" fill="#E78FA6" opacity=".5" clip-path="url(#bt)"/>
+      <rect x="19" y="33.4" width="26" height="2.4" fill="#E78FA6" clip-path="url(#bt)"/>
+      <path d="M28 19h8a9 9 0 0 1 9 9v23a9 9 0 0 1-9 9h-8a9 9 0 0 1-9-9V28a9 9 0 0 1 9-9Z" fill="none" stroke="#E78FA6" stroke-width="3.4"/>
+      <path d="M24 27h6M24 31h4" stroke="#E78FA6" stroke-width="2.4" stroke-linecap="round"/>
+    </svg>
+    <span>Молочко</span>
+  </div>
+
+  <h1>Политика конфиденциальности</h1>
+  <p class="upd">Действует с 6 ноября 2026 года</p>
+
+  <p class="lead">Коротко: приложение <b>не собирает и не передаёт</b> никаких данных. Всё, что вы записываете, остаётся на вашем телефоне.</p>
+
+  <h2>Какие данные хранит приложение</h2>
+  <p>Приложение «Молочко» (далее — приложение) сохраняет на самом устройстве:</p>
+  <ul>
+    <li>записи о кормлениях: время, какая грудь, длительность;</li>
+    <li>настройки: интервал между кормлениями, длительность, время напоминаний, выбранная цветовая гамма;</li>
+    <li>адрес электронной почты и зашифрованный отпечаток пароля, если вы создали аккаунт внутри приложения.</li>
+  </ul>
+  <p>Эти данные хранятся в локальном хранилище браузерного движка устройства. Они не отправляются на серверы разработчика — у приложения нет сервера, — не передаются третьим лицам и не используются для рекламы или аналитики.</p>
+
+  <h2>Пароль и биометрия</h2>
+  <p>Пароль не сохраняется. Приложение хранит только его необратимую криптографическую свёртку (SHA-256), по которой нельзя восстановить исходный пароль. Она используется лишь для того, чтобы проверить вход на этом же устройстве.</p>
+  <p>Если вы включили вход по отпечатку пальца или Face ID, приложение пользуется стандартным механизмом устройства. Сам отпечаток или снимок лица приложению недоступен: операционная система лишь сообщает, что проверка прошла успешно.</p>
+
+  <h2>Чего приложение не делает</h2>
+  <ul>
+    <li>не запрашивает доступ к камере, микрофону, контактам, геопозиции и файлам;</li>
+    <li>не показывает рекламу и не содержит рекламных или аналитических библиотек;</li>
+    <li>не создаёт профиль пользователя и не отслеживает поведение;</li>
+    <li>не передаёт данные третьим лицам, не продаёт и не передаёт их для обучения моделей.</li>
+  </ul>
+
+  <h2>Дети</h2>
+  <p>Приложение предназначено для взрослых — родителей и тех, кто ухаживает за ребёнком. Оно не адресовано детям и не собирает сведения о них, кроме тех записей о кормлениях, которые взрослый вносит сам и которые не покидают его телефона.</p>
+
+  <h2>Удаление данных</h2>
+  <p>Вы управляете данными полностью сами:</p>
+  <ul>
+    <li>кнопка «Очистить историю кормлений» в настройках удаляет все записи;</li>
+    <li>удаление приложения с устройства стирает все данные без остатка;</li>
+    <li>отдельный запрос на удаление отправлять некому и некуда — копий данных у разработчика нет.</li>
+  </ul>
+
+  <h2>Изменения политики</h2>
+  <p>Если в приложении появится функция, которой потребуется передача данных, — например синхронизация между устройствами, — политика будет обновлена до выхода такой версии, а дата вверху страницы изменится.</p>
+
+  <h2>Контакты</h2>
+  <p>Вопросы о приложении и об этой политике: <a href="mailto:i.lyagoosha@gmail.com">i.lyagoosha@gmail.com</a></p>
+
+  <footer>«Молочко» — дневник грудных кормлений. Приложение работает без интернета и без учётной записи.</footer>
+
+</div>
+</body>
+</html>
