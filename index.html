@@ -11,6 +11,7 @@
 <meta name="description" content="Дневник грудных кормлений: таймер до следующего кормления и подсказка, какой грудью кормить.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
   :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
   html,body{margin:0;font-family:system-ui,sans-serif;}
@@ -950,6 +951,35 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(function(){});
   });
 }
+</script>
+<script>
+/* Подсказка «Добавить на экран Домой» — только на iPhone/iPad в Safari, один раз */
+(function(){
+  try{
+    var ua = navigator.userAgent || '';
+    var ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    var standalone = window.navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+    if(!ios || standalone) return;
+    var KEY = 'molochko-ios-hint';
+    try{ if(localStorage.getItem(KEY)) return; }catch(e){}
+    var safari = !/CriOS|FxiOS|EdgiOS|OPiOS|YaBrowser/.test(ua);
+    setTimeout(function(){
+      var b = document.createElement('div');
+      b.setAttribute('role','dialog');
+      b.style.cssText = 'position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:99999;background:var(--card,#342838);color:var(--ink,#F7ECF0);border:1px solid var(--line,#44344A);border-radius:18px;padding:14px 16px;box-shadow:0 8px 28px rgba(0,0,0,.45);font:600 15px/1.4 Nunito,system-ui,sans-serif;display:flex;gap:12px;align-items:flex-start';
+      var t = document.createElement('div');
+      t.style.flex = '1';
+      t.innerHTML = safari
+        ? '<b>Установите «Молочко» на телефон</b><br><span style="font-weight:400;color:var(--ink-soft,#B8A4B1)">Нажмите «Поделиться» <span aria-hidden="true">⬆️</span> внизу экрана и выберите «На экран „Домой“». Тогда приложение будет работать без интернета, как обычное.</span>'
+        : '<b>Откройте в Safari</b><br><span style="font-weight:400;color:var(--ink-soft,#B8A4B1)">Установить приложение на iPhone можно только из Safari: откройте эту страницу в нём и нажмите «Поделиться» → «На экран „Домой“».</span>';
+      var x = document.createElement('button');
+      x.type = 'button'; x.textContent = 'Понятно';
+      x.style.cssText = 'flex:none;border:0;border-radius:12px;padding:8px 12px;background:var(--rose,#E78FA6);color:var(--on-rose,#241A25);font:700 14px Nunito,system-ui,sans-serif';
+      x.onclick = function(){ try{ localStorage.setItem(KEY,'1'); }catch(e){} b.remove(); };
+      b.appendChild(t); b.appendChild(x); document.body.appendChild(b);
+    }, 2500);
+  }catch(e){}
+})();
 </script>
 </body>
 </html>
