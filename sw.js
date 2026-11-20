@@ -1,5 +1,5 @@
 /* Молочко — оффлайн-кэш. Поднимайте CACHE при каждом обновлении приложения. */
-const CACHE = 'molochko-v9';
+const CACHE = 'molochko-v10';
 const ASSETS = ['./', './index.html', './privacy.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {
@@ -26,6 +26,16 @@ self.addEventListener('fetch', (e) => {
           return res;
         })
         .catch(() => caches.match('./index.html'));
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      if (list.length) return list[0].focus();
+      return self.clients.openWindow('./');
     })
   );
 });
