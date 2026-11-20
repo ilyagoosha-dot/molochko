@@ -519,6 +519,7 @@
   }
   function save(){
     try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){}
+    nativeSchedule();
   }
 
   /* ---------- утилиты ---------- */
@@ -530,6 +531,13 @@
     if(f === 'instr') return s === 'left' ? 'левой грудью' : 'правой грудью';
     if(f === 'gen') return s === 'left' ? 'из левой груди' : 'из правой груди';
     return s === 'left' ? 'Левой' : 'Правой';
+  }
+  function minWord(n){
+    var a = n % 100, b = n % 10;
+    if(a > 10 && a < 20) return 'минут';
+    if(b === 1) return 'минуту';
+    if(b > 1 && b < 5) return 'минуты';
+    return 'минут';
   }
   function sameDay(ts){
     var a = new Date(ts), b = new Date();
@@ -786,6 +794,7 @@
 
   /* ---------- лист 4: кормление ---------- */
   function startFeed(side){
+    Alarm.stop(); endNotified = false; askNotify();
     S.feedSide = side; S.feedStart = Date.now(); S.snoozeUntil = null; save();
     $('overlay').hidden = true;
     paintFeed(); show('feed');
@@ -804,9 +813,16 @@
     if(!S.feedStart) return;
     var sec = Math.floor((Date.now() - S.feedStart) / 1000);
     $('feed-clock').textContent = pad(Math.floor(sec / 60)) + ':' + pad(sec % 60);
-    if(S.remindEnd && sec === S.duration * 60) toast('Кормим уже ' + S.duration + ' минут');
+    if(S.remindEnd && sec >= S.duration * 60 && !endNotified){
+      endNotified = true;
+      Alarm.start();
+      $('feed-hint').textContent = 'Уже ' + S.duration + ' ' + minWord(S.duration) + '. Нажмите «Покормили», когда закончите.';
+      toast('Кормим уже ' + S.duration + ' ' + minWord(S.duration));
+      notifyOS('Кормим уже ' + S.duration + ' ' + minWord(S.duration), 'Можно заканчивать', 'molochko-end');
+    }
   }
   $('feed-done').addEventListener('click', function(){
+    Alarm.stop(); endNotified = false;
     var mins = Math.max(1, Math.round((Date.now() - S.feedStart) / 60000));
     S.lastSide = S.feedSide; S.lastAt = Date.now();
     S.log.unshift({ at: S.lastAt, side: S.feedSide, dur: mins });
@@ -816,6 +832,7 @@
     toast('Записала: ' + word(S.lastSide, 'instr') + ', ' + mins + ' мин');
   });
   $('feed-cancel').addEventListener('click', function(){
+    Alarm.stop(); endNotified = false;
     S.feedSide = null; S.feedStart = null; save();
     paintHome(); show('home');
   });
@@ -886,6 +903,126 @@
     paintHome(); toast('История очищена');
   });
 
+
+  /* ---------- звук, вибрация, системные уведомления ---------- */
+  var endNotified = false;
+  var CAP = window.Capacitor && window.Capacitor.Plugins ? window.Capacitor.Plugins : null;
+  var LN = CAP && CAP.LocalNotifications ? CAP.LocalNotifications : null;
+  var HP = CAP && CAP.Haptics ? CAP.Haptics : null;
+
+  var Alarm = (function(){
+    var ctx = null, timer = null, stopAt = 0;
+    function ensure(){
+      try{
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if(!AC) return null;
+        if(!ctx) ctx = new AC();
+        if(ctx.state === 'suspended') ctx.resume();
+      }catch(e){ ctx = null; }
+      return ctx;
+    }
+    function chime(){
+      var c = ensure(); if(!c) return;
+      try{
+        var t0 = c.currentTime + 0.03;
+        [[784, 0], [988, 0.3], [1319, 0.6]].forEach(function(n){
+          var o = c.createOscillator(), g = c.createGain(), at = t0 + n[1];
+          o.type = 'sine'; o.frequency.value = n[0];
+          g.gain.setValueAtTime(0.0001, at);
+          g.gain.exponentialRampToValueAtTime(0.5, at + 0.04);
+          g.gain.exponentialRampToValueAtTime(0.0001, at + 1.1);
+          o.connect(g); g.connect(c.destination);
+          o.start(at); o.stop(at + 1.2);
+        });
+      }catch(e){}
+    }
+    function buzz(){
+      try{ if(navigator.vibrate) navigator.vibrate([500, 250, 500, 250, 800]); }catch(e){}
+      try{ if(HP) HP.vibrate({ duration: 500 }); }catch(e){}
+    }
+    function once(){ chime(); buzz(); }
+    function stop(){
+      if(timer){ clearInterval(timer); timer = null; }
+      try{ if(navigator.vibrate) navigator.vibrate(0); }catch(e){}
+    }
+    function start(){
+      stop(); once();
+      stopAt = Date.now() + 90000;
+      timer = setInterval(function(){ if(Date.now() > stopAt){ stop(); return; } once(); }, 6000);
+    }
+    return { unlock: ensure, start: start, stop: stop };
+  })();
+  /* браузеры разрешают звук и вибрацию только после касания — открываем при первом же касании,
+     а любое следующее касание выключает звонок (взяли телефон — услышали) */
+  ['pointerdown', 'touchstart', 'keydown'].forEach(function(ev){
+    document.addEventListener(ev, function(){ Alarm.unlock(); Alarm.stop(); }, { capture: true, passive: true });
+  });
+
+  function askNotify(){
+    try{
+      if(LN){
+        LN.requestPermissions().catch(function(){});
+        return;
+      }
+      if('Notification' in window && Notification.permission === 'default'){
+        var r = Notification.requestPermission();
+        if(r && r.catch) r.catch(function(){});
+      }
+    }catch(e){}
+  }
+  function notifyOS(title, body, tag){
+    try{
+      if(LN || !document.hidden) return;
+      if(!('Notification' in window) || Notification.permission !== 'granted') return;
+      var opts = { body: body, tag: tag, icon: 'icon-192.png', badge: 'icon-192.png',
+                   vibrate: [500, 250, 500, 250, 800], requireInteraction: true, renotify: true };
+      if(navigator.serviceWorker && navigator.serviceWorker.getRegistration){
+        navigator.serviceWorker.getRegistration().then(function(r){
+          if(r && r.showNotification) r.showNotification(title, opts); else new Notification(title, opts);
+        }).catch(function(){});
+      } else { new Notification(title, opts); }
+    }catch(e){}
+  }
+
+  /* в нативной оболочке (Capacitor) напоминания ставит сама система, даже при выключенном экране */
+  function nextOkAt(ts){
+    if(quietOk(ts)) return ts;
+    function mins(t){ var q = (t || '00:00').split(':'); return (+q[0]) * 60 + (+q[1]); }
+    var m = mins(S.from);
+    for(var add = 0; add < 3; add++){
+      var d = new Date(ts); d.setDate(d.getDate() + add); d.setHours(Math.floor(m / 60), m % 60, 0, 0);
+      if(d.getTime() >= ts) return d.getTime();
+    }
+    return ts;
+  }
+  var nativeReady = false;
+  function nativeSchedule(){
+    if(!LN) return;
+    try{
+      if(!nativeReady){
+        nativeReady = true;
+        if(LN.createChannel) LN.createChannel({ id: 'molochko', name: 'Напоминания о кормлении', importance: 5, vibration: true, visibility: 1 }).catch(function(){});
+      }
+      LN.cancel({ notifications: [{ id: 1 }, { id: 2 }] }).catch(function(){});
+      var items = [];
+      if(S.feedStart){
+        if(S.remindEnd) items.push({ id: 2, title: 'Кормим уже ' + S.duration + ' ' + minWord(S.duration), body: 'Можно заканчивать',
+          schedule: { at: new Date(S.feedStart + S.duration * 60000) }, channelId: 'molochko' });
+      } else {
+        var na = nextAt();
+        if(na){
+          na = nextOkAt(na);
+          if(na > Date.now()){
+            var side = S.lastSide ? other(S.lastSide) : 'left';
+            items.push({ id: 1, title: 'Мамочка, я хочу кушать!', body: 'Пора кормить ' + word(side, 'instr'),
+              schedule: { at: new Date(na) }, channelId: 'molochko' });
+          }
+        }
+      }
+      if(items.length) LN.schedule({ notifications: items }).catch(function(){});
+    }catch(e){}
+  }
+
   /* ---------- напоминание ---------- */
   var CALLS = ['Мамочка, я хочу кушать!','Мама, покорми меня','Мамочка, пора кушать!','Мам, я уже проснулся и хочу молочка','Мамуля, я тебя жду'];
   var lastCall = -1, notified = null;
@@ -894,15 +1031,16 @@
     if(i === lastCall) i = (i + 1) % CALLS.length;
     lastCall = i; return CALLS[i];
   }
-  function quietOk(){
-    var d = new Date(), now = d.getHours() * 60 + d.getMinutes();
+  function quietOk(ts){
+    var d = ts ? new Date(ts) : new Date(), now = d.getHours() * 60 + d.getMinutes();
     function mins(t){ var p = (t || '00:00').split(':'); return (+p[0]) * 60 + (+p[1]); }
     var a = mins(S.from), b = mins(S.to);
     return a <= b ? (now >= a && now <= b) : (now >= a || now <= b);
   }
   function openReminder(){
     var side = S.lastSide ? other(S.lastSide) : 'left';
-    $('n-title').textContent = babyCall();
+    var callText = babyCall();
+    $('n-title').textContent = callText;
     $('n-which').innerHTML = '<span class="dot d-' + side + '"></span>' + word(side, 'short') + ' грудью';
     $('n-which').style.background = side === 'left' ? 'var(--lav-soft)' : 'var(--rose-soft)';
     $('n-which').style.color = side === 'left' ? 'var(--lav-ink)' : 'var(--rose-ink)';
@@ -911,10 +1049,13 @@
     $('n-swap').textContent = 'Покормить ' + word(other(side), 'instr');
     $('n-swap').dataset.side = other(side);
     $('overlay').hidden = false;
+    Alarm.start();
+    notifyOS(callText, 'Пора кормить ' + word(side, 'instr'), 'molochko-feed');
   }
   $('n-start').addEventListener('click', function(){ startFeed(this.dataset.side); });
   $('n-swap').addEventListener('click', function(){ startFeed(this.dataset.side); });
   $('n-snooze').addEventListener('click', function(){
+    Alarm.stop();
     S.snoozeUntil = Date.now() + 10 * 60000; save();
     $('overlay').hidden = true; notified = null;
     paintHome(); toast('Отложила на 10 минут');
