@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#241B27">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -13,7 +13,6 @@
 <link rel="icon" href="icon-192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
-  :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
   html,body{margin:0;font-family:system-ui,sans-serif;}
   img{max-width:100%}
   [hidden]{display:none!important}
@@ -57,11 +56,16 @@
     -webkit-font-smoothing:antialiased;
     overscroll-behavior:none;
   }
+  :root{--z:1;}
+  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:manipulation;}
   .app{
     box-sizing:border-box;
     height:100%;
+    height:calc(100dvh / var(--z));
+    zoom:var(--z);
     max-width:480px;
     margin:0 auto;
+    padding-top:env(safe-area-inset-top,0px);
     padding-inline:16px;
     display:flex;flex-direction:column;
     position:relative;
@@ -110,7 +114,7 @@
   .actions{margin-top:16px;padding-bottom:10px;}
   .pad.top{justify-content:flex-start;padding-top:4px;gap:12px;flex:none;}
 
-  /* auth + setup */
+  /* setup */
   .pad{display:flex;flex-direction:column;gap:14px;justify-content:flex-start;flex:none;padding-top:6px;}
   .center{align-items:center;text-align:center;}
   .bottle{width:92px;height:92px;flex:none;}
@@ -127,11 +131,11 @@
   .fine{font-size:11.5px;color:var(--ink-soft);text-align:center;line-height:1.5;margin:0;}
 
   /* home */
-  .ring-wrap{position:relative;width:min(200px,50vw);aspect-ratio:1;margin:0 auto 4px;flex:none;}
+  .ring-wrap{position:relative;width:min(200px,50vw,30vh);aspect-ratio:1;margin:0 auto 4px;flex:none;}
   .ring-wrap svg{width:100%;height:100%;transform:rotate(-90deg);}
   .ring-track{fill:none;stroke:var(--sunk);stroke-width:16;}
   .ring-prog{fill:none;stroke:var(--rose);stroke-width:16;stroke-linecap:round;transition:stroke-dashoffset .6s ease, stroke .4s ease;}
-  .ring-in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;}
+  .ring-in{position:absolute;inset:0;padding:0 12%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;}
   .ring-in .cap{font-size:12px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-soft);}
   .ring-in .big{font-family:"Comfortaa",ui-rounded,sans-serif;font-weight:700;font-size:37px;font-variant-numeric:tabular-nums;line-height:1.05;}
   .ring-in .note{font-size:13px;color:var(--ink-soft);font-weight:600;}
@@ -190,16 +194,13 @@
   .switch:checked::after{transform:translateX(22px);}
   .timerow{display:flex;align-items:center;gap:8px;}
   .timerow span{font-size:14px;color:var(--ink-soft);font-weight:700;}
-  .timerow input{flex:1;font-family:"Comfortaa",ui-rounded,sans-serif;font-size:16px;font-weight:700;color:var(--ink);background:var(--sunk);border:0;border-radius:14px;padding:11px 10px;text-align:center;}
+  .timerow input{flex:1 1 0;min-width:0;width:0;box-sizing:border-box;font-family:"Comfortaa",ui-rounded,sans-serif;font-size:16px;font-weight:700;color:var(--ink);background:var(--sunk);border:0;border-radius:14px;padding:11px 10px;text-align:center;}
   .b-danger{background:rgba(231,143,166,.14);color:var(--rose-ink);border:1.5px solid var(--rose);font-size:15px;padding:13px 18px;}
   .b-danger.armed{background:var(--rose);color:var(--on-rose);border-color:var(--rose);}
   .doclink{
     display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:700;
     color:var(--lav-ink);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:4px;
   }
-  .acct{display:flex;align-items:center;gap:10px;}
-  .acct .mail{font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .acct button{margin-left:auto;flex:none;width:auto;padding:9px 14px;font-size:13px;border-radius:14px;}
 
   /* overlay */
   .overlay{position:fixed;inset:0;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center;padding:16px;z-index:9;}
@@ -222,10 +223,60 @@
     opacity:0;pointer-events:none;transition:opacity .25s ease, transform .25s ease;z-index:20;white-space:nowrap;max-width:90vw;
   }
   .toast.show{opacity:1;transform:translate(-50%,0);}
+
+  /* ---------- масштабирование под разные экраны ---------- */
+  @media (max-width:350px){
+    .ring-in{padding:0 17%;}
+    .ring-in .cap{font-size:9.5px;letter-spacing:0;}
+    .ring-in .big{font-size:30px;}
+    .ring-in .note{font-size:12px;}
+    .btn{font-size:16px;padding:15px 14px;}
+    .twin .btn{font-size:16px;}
+    h2.title{font-size:21px;}
+    .pulse .clock{font-size:32px;}
+  }
+  @media (max-height:640px){
+    .ring-wrap{width:min(170px,44vw,30vh);}
+    .log{margin-top:12px;}
+  }
+  /* планшеты и широкие экраны: увеличиваем всё приложение целиком */
+  @media (min-width:600px) and (min-height:640px){ :root{--z:1.3;} }
+  @media (min-width:760px) and (min-height:900px){ :root{--z:1.6;} }
+  @media (min-width:1000px) and (min-height:1100px){ :root{--z:1.9;} }
+
+  /* ---------- заставка при запуске ---------- */
+  .splash{
+    position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;zoom:var(--z);
+    background:
+      radial-gradient(70% 45% at 15% 0%, color-mix(in srgb, var(--rose) 22%, transparent) 0%, transparent 60%),
+      radial-gradient(60% 40% at 95% 18%, color-mix(in srgb, var(--lav) 24%, transparent) 0%, transparent 58%),
+      linear-gradient(170deg, var(--page-a), var(--page-b));
+    background-color:var(--page-a);
+    transition:opacity .45s ease, visibility .45s ease;
+  }
+  .splash.out{opacity:0;visibility:hidden;pointer-events:none;}
+  .splash svg{width:96px;height:96px;animation:splashIn .7s cubic-bezier(.2,.8,.3,1) both;}
+  .splash .sname{font-family:"Comfortaa",ui-rounded,sans-serif;font-weight:700;font-size:34px;color:var(--ink);animation:splashIn .7s .12s cubic-bezier(.2,.8,.3,1) both;}
+  .splash .stag{font-size:15px;color:var(--ink-soft);font-weight:600;margin-top:-8px;animation:splashIn .7s .22s cubic-bezier(.2,.8,.3,1) both;}
+  @keyframes splashIn{from{opacity:0;transform:translateY(14px) scale(.96);}to{opacity:1;transform:none;}}
+  @media (prefers-reduced-motion: reduce){.splash svg,.splash .sname,.splash .stag{animation:none;}}
 </style>
 
 </head>
 <body>
+<div class="splash" id="splash" aria-hidden="true">
+  <svg viewBox="0 0 64 64">
+    <path d="M32 1c3.3 0 5.5 2.9 5.5 6.9V12.6h-11V7.9C26.5 3.9 28.7 1 32 1Z" fill="var(--lav)"/>
+    <rect x="23" y="12" width="18" height="7" rx="3.5" fill="var(--lav)"/>
+    <clipPath id="bt3"><path d="M28 19h8a9 9 0 0 1 9 9v23a9 9 0 0 1-9 9h-8a9 9 0 0 1-9-9V28a9 9 0 0 1 9-9Z"/></clipPath>
+    <rect x="19" y="34" width="26" height="27" fill="var(--rose)" opacity=".5" clip-path="url(#bt3)"/>
+    <rect x="19" y="33.4" width="26" height="2.4" fill="var(--rose)" clip-path="url(#bt3)"/>
+    <path d="M28 19h8a9 9 0 0 1 9 9v23a9 9 0 0 1-9 9h-8a9 9 0 0 1-9-9V28a9 9 0 0 1 9-9Z" fill="none" stroke="var(--rose)" stroke-width="3.4"/>
+    <path d="M24 27h6M24 31h4" stroke="var(--rose)" stroke-width="2.4" stroke-linecap="round"/>
+  </svg>
+  <div class="sname">Молочко</div>
+  <div class="stag">Какой грудью кормили</div>
+</div>
 <div class="app">
   <header class="topbar">
     <div class="logo">
@@ -245,49 +296,11 @@
     </button>
   </header>
 
-  <!-- ЛИСТ 1 — регистрация (только при первом запуске) -->
-  <section class="view" id="v-auth" hidden>
-    <div class="pad center">
-      <svg class="bottle" viewBox="0 0 64 64" aria-hidden="true">
-        <path d="M32 1c3.3 0 5.5 2.9 5.5 6.9V12.6h-11V7.9C26.5 3.9 28.7 1 32 1Z" fill="var(--lav)"/>
-        <rect x="23" y="12" width="18" height="7" rx="3.5" fill="var(--lav)"/>
-        <clipPath id="bt2"><path d="M28 19h8a9 9 0 0 1 9 9v23a9 9 0 0 1-9 9h-8a9 9 0 0 1-9-9V28a9 9 0 0 1 9-9Z"/></clipPath>
-        <rect x="19" y="34" width="26" height="27" fill="var(--rose)" opacity=".5" clip-path="url(#bt2)"/>
-        <rect x="19" y="33.4" width="26" height="2.4" fill="var(--rose)" clip-path="url(#bt2)"/>
-        <path d="M28 19h8a9 9 0 0 1 9 9v23a9 9 0 0 1-9 9h-8a9 9 0 0 1-9-9V28a9 9 0 0 1 9-9Z" fill="none" stroke="var(--rose)" stroke-width="3.4"/>
-        <path d="M24 27h6M24 31h4" stroke="var(--rose)" stroke-width="2.4" stroke-linecap="round"/>
-      </svg>
-      <h2 class="title" id="auth-title">Заведём аккаунт</h2>
-      <p class="sub" id="auth-sub">Кормления сохранятся, даже если телефон разрядится или потеряется.</p>
-      <div class="stack" style="width:100%;margin-top:6px">
-        <div class="inp" id="w-mail">
-          <label for="i-mail">Почта</label>
-          <input type="email" id="i-mail" placeholder="mama@pochta.ru" autocomplete="email" inputmode="email">
-        </div>
-        <div class="inp" id="w-pass">
-          <label for="i-pass">Пароль</label>
-          <input type="password" id="i-pass" placeholder="не меньше 6 символов" autocomplete="new-password">
-        </div>
-        <p class="err" id="auth-err" hidden></p>
-        <button class="btn b-right" id="auth-go">Создать аккаунт</button>
-        <button class="btn b-quiet" id="auth-bio" hidden>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M12 3.5c-2 0-3.8.7-5.2 1.9M19.2 7.6A8.5 8.5 0 0 0 16.5 4.7"/><path d="M4.2 8.6A8.5 8.5 0 0 0 3.5 12v2.4M20.5 12v3.4c0 1.2-.2 2.3-.6 3.4"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0v3c0 1.4-.2 2.7-.7 4"/><path d="M12 12v3.5c0 1.6-.3 3.1-.9 4.5"/><path d="M7.6 17.6c-.4 1-.9 1.8-1.6 2.6"/></svg>
-          Войти по отпечатку
-        </button>
-        <p class="fine" id="auth-fine">Продолжая, вы соглашаетесь с <a class="doclink" href="privacy.html" target="_blank" rel="noopener" style="font-size:11.5px">политикой конфиденциальности</a>. Рекламы нет, данные третьим лицам не передаём.</p>
-      </div>
-    </div>
-    <div class="stack actions" style="align-items:center">
-      <button class="linkbtn" id="auth-swap">Уже есть аккаунт? Войти</button>
-      <button class="linkbtn" id="auth-skip">Позже — сейчас надо кормить</button>
-    </div>
-  </section>
-
   <!-- ЛИСТ 2 — первичные настройки -->
   <section class="view" id="v-setup" hidden>
     <div class="stack" style="gap:13px;padding-top:6px">
       <div>
-        <p class="eyebrow">Шаг 2 из 2</p>
+        <p class="eyebrow">Первый запуск</p>
         <h2 class="title">Настроим под малыша</h2>
         <p class="sub" style="margin-top:6px">Эти параметры потом можно менять в любой момент.</p>
       </div>
@@ -329,6 +342,7 @@
     </div>
     <div class="stack actions">
       <button class="btn b-right" id="setup-done">Готово, начинаем</button>
+      <p class="fine">Дневник хранится только на этом телефоне: без регистрации, рекламы и передачи данных. <a class="doclink" href="privacy.html" target="_blank" rel="noopener" style="font-size:11.5px">Политика конфиденциальности</a></p>
     </div>
   </section>
 
@@ -385,15 +399,6 @@
     <div class="stack" style="gap:13px;padding-top:6px">
       <h2 class="title">Настройки</h2>
       <div class="field">
-        <span class="lab">Аккаунт</span>
-        <div class="acct">
-          <span class="dot d-right"></span>
-          <span class="mail" id="acct-mail">Без аккаунта</span>
-          <button class="btn b-quiet" id="acct-btn">Войти</button>
-        </div>
-        <span class="help" id="acct-help"></span>
-      </div>
-      <div class="field">
         <span class="lab">Кто у нас растёт</span>
         <div class="seg" id="s-baby2">
           <button type="button" data-baby="girl" aria-pressed="true"><span class="sw-girl"></span>Девочка</button>
@@ -430,28 +435,15 @@
       </div>
       <div class="field">
         <div class="switchrow">
-          <span class="lab">Вход по отпечатку или Face ID</span>
-          <input type="checkbox" class="switch" id="bio-sw">
+          <span class="lab">Напоминания при выключенном экране</span>
+          <input type="checkbox" class="switch" id="notif-sw">
         </div>
-        <span class="help" id="bio-help">Приложение будет спрашивать отпечаток вместо пароля.</span>
+        <span class="help" id="notif-help">Телефон один раз спросит разрешение. Если не включать, напоминания работают, пока приложение открыто.</span>
       </div>
-
-      <div class="field">
-        <span class="lab">Выход</span>
-        <button class="btn b-quiet" id="lock">Выйти из приложения</button>
-        <span class="help">При следующем запуске попросим пароль или отпечаток. Дневник останется на месте.</span>
-      </div>
-
       <div class="field">
         <span class="lab">Дневник</span>
         <button class="btn b-quiet" id="wipe">Очистить историю кормлений</button>
         <span class="help">Удалит все записи на этом телефоне. Настройки останутся.</span>
-      </div>
-
-      <div class="field">
-        <span class="lab">Удаление аккаунта</span>
-        <button class="btn b-danger" id="kill">Удалить аккаунт и все данные</button>
-        <span class="help" id="kill-help">Сотрёт аккаунт, дневник и настройки без возможности восстановить. Приложение вернётся к первому запуску.</span>
       </div>
 
       <div class="field">
@@ -496,10 +488,10 @@
   var all = function(sel){ return Array.prototype.slice.call(document.querySelectorAll(sel)); };
 
   var DEF = {
-    account:null, passHash:null, skipped:false, onboarded:false, locked:false, bioId:null,
+    onboarded:false,
     baby:'girl', interval:180, duration:30, remindEnd:true,
     from:'06:00', to:'23:59',
-    lastSide:null, lastAt:null, snoozeUntil:null,
+    notify:false, lastSide:null, lastAt:null, snoozeUntil:null,
     feedSide:null, feedStart:null,
     log:[]
   };
@@ -549,53 +541,8 @@
     clearTimeout(t._h); t._h = setTimeout(function(){ t.classList.remove('show'); }, 2100);
   }
 
-  /* ---------- пароль и биометрия ---------- */
-  function sha256(text){
-    if(!(window.crypto && crypto.subtle)) return Promise.resolve('plain:' + text);
-    var data = new TextEncoder().encode('molochko:' + text);
-    return crypto.subtle.digest('SHA-256', data).then(function(buf){
-      return Array.prototype.map.call(new Uint8Array(buf), function(b){ return ('0' + b.toString(16)).slice(-2); }).join('');
-    });
-  }
-  function b64(buf){
-    var bin = '', arr = new Uint8Array(buf);
-    for(var i = 0; i < arr.length; i++) bin += String.fromCharCode(arr[i]);
-    return btoa(bin);
-  }
-  function unb64(str){
-    var bin = atob(str), arr = new Uint8Array(bin.length);
-    for(var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-    return arr;
-  }
-  function rand(n){ var a = new Uint8Array(n); (crypto.getRandomValues ? crypto : window.msCrypto).getRandomValues(a); return a; }
-
-  function bioSupported(){
-    try{
-      if(!window.PublicKeyCredential || !navigator.credentials) return Promise.resolve(false);
-      return PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable().catch(function(){ return false; });
-    }catch(e){ return Promise.resolve(false); }
-  }
-  function bioEnroll(){
-    return navigator.credentials.create({ publicKey: {
-      challenge: rand(32),
-      rp: { name: 'Молочко' },
-      user: { id: rand(16), name: S.account || 'mama', displayName: 'Мама' },
-      pubKeyCredParams: [{ type:'public-key', alg:-7 }, { type:'public-key', alg:-257 }],
-      authenticatorSelection: { authenticatorAttachment:'platform', userVerification:'required', residentKey:'preferred' },
-      timeout: 60000, attestation: 'none'
-    }}).then(function(cred){ S.bioId = b64(cred.rawId); save(); return true; });
-  }
-  function bioVerify(){
-    if(!S.bioId) return Promise.reject();
-    return navigator.credentials.get({ publicKey: {
-      challenge: rand(32),
-      allowCredentials: [{ type:'public-key', id: unb64(S.bioId) }],
-      userVerification: 'required', timeout: 60000
-    }}).then(function(){ return true; });
-  }
-
   /* ---------- листы ---------- */
-  var VIEWS = { auth:'v-auth', setup:'v-setup', home:'v-home', feed:'v-feed', settings:'v-settings' };
+  var VIEWS = { setup:'v-setup', home:'v-home', feed:'v-feed', settings:'v-settings' };
   var current = null;
   function show(name){
     for(var k in VIEWS) $(VIEWS[k]).hidden = (k !== name);
@@ -620,11 +567,7 @@
       b.setAttribute('aria-pressed', b.dataset.baby === S.baby ? 'true' : 'false');
     });
     document.body.setAttribute('data-baby', S.baby);
-    $('acct-mail').textContent = S.account ? S.account : 'Без аккаунта';
-    $('acct-btn').textContent = S.account ? 'Выйти' : 'Войти';
-    $('acct-help').textContent = S.account
-      ? 'Дневник привязан к аккаунту.'
-      : 'Без аккаунта дневник хранится только на этом телефоне.';
+    var ns = $('notif-sw'); if(ns) ns.checked = !!S.notify;
   }
 
   all('[data-step]').forEach(function(b){
@@ -647,82 +590,6 @@
       toast(S.baby === 'boy' ? 'Ночная синяя гамма' : 'Розовая гамма');
     });
   });
-
-  /* ---------- лист 1: регистрация ---------- */
-  var mode = 'signup';
-  function paintAuth(){
-    var s = mode === 'signup';
-    var locked = S.locked && !!S.account;
-    $('auth-title').textContent = s ? 'Заведём аккаунт' : (locked ? 'С возвращением' : 'Вход');
-    $('auth-sub').textContent = s
-      ? 'Кормления сохранятся, даже если телефон разрядится или потеряется.'
-      : (locked ? 'Дневник на месте — нужен только пароль.' : 'Войдите — и дневник кормлений вернётся на место.');
-    $('auth-go').textContent = s ? 'Создать аккаунт' : 'Войти';
-    $('auth-swap').textContent = s ? 'Уже есть аккаунт? Войти' : 'Ещё нет аккаунта? Создать';
-    $('auth-swap').hidden = locked;
-    $('i-pass').placeholder = s ? 'не меньше 6 символов' : 'ваш пароль';
-    $('auth-fine').hidden = !s;
-    $('auth-skip').hidden = !!S.account;
-    if(locked && S.account) $('i-mail').value = S.account;
-    $('auth-bio').hidden = !(locked && S.bioId);
-    clearErr();
-  }
-  function clearErr(){
-    $('auth-err').hidden = true;
-    $('w-mail').classList.remove('bad'); $('w-pass').classList.remove('bad');
-  }
-  function err(field, msg){
-    $('auth-err').textContent = msg; $('auth-err').hidden = false;
-    $(field === 'mail' ? 'w-mail' : 'w-pass').classList.add('bad');
-    $(field === 'mail' ? 'i-mail' : 'i-pass').focus();
-  }
-  $('i-mail').addEventListener('input', clearErr);
-  $('i-pass').addEventListener('input', clearErr);
-  $('auth-swap').addEventListener('click', function(){ mode = mode === 'signup' ? 'login' : 'signup'; paintAuth(); });
-  $('auth-skip').addEventListener('click', function(){ S.skipped = true; save(); afterAuth(); });
-  $('auth-go').addEventListener('click', function(){
-    var mail = $('i-mail').value.trim(), pass = $('i-pass').value;
-    if(mail.indexOf('@') < 1 || mail.indexOf('.', mail.indexOf('@')) < 0){ err('mail', 'Проверьте почту — кажется, там опечатка.'); return; }
-    if(mode === 'signup' && pass.length < 6){ err('pass', 'Пусть в пароле будет хотя бы 6 символов.'); return; }
-    if(mode === 'login' && !pass.length){ err('pass', 'Введите пароль.'); return; }
-
-    if(mode === 'login' && S.account && S.passHash){
-      if(mail.toLowerCase() !== S.account.toLowerCase()){
-        err('mail', 'Этот телефон помнит другую почту: ' + S.account);
-        return;
-      }
-      sha256(pass).then(function(h){
-        if(h !== S.passHash){ err('pass', 'Пароль не подошёл. Попробуйте ещё раз.'); return; }
-        $('i-pass').value = '';
-        unlock('С возвращением!');
-      });
-      return;
-    }
-
-    sha256(pass).then(function(h){
-      S.account = mail; S.passHash = h; S.skipped = false; S.locked = false; save();
-      $('i-pass').value = '';
-      toast(mode === 'signup' ? 'Аккаунт создан' : 'С возвращением!');
-      afterAuth();
-    });
-  });
-
-  function unlock(msg){
-    S.locked = false; save();
-    toast(msg);
-    afterAuth();
-  }
-
-  $('auth-bio').addEventListener('click', function(){
-    var btn = this;
-    btn.disabled = true;
-    bioVerify().then(function(){ btn.disabled = false; unlock('С возвращением!'); })
-      .catch(function(){ btn.disabled = false; err('pass', 'Не узнала отпечаток. Войдите паролем.'); });
-  });
-  function afterAuth(){
-    if(S.onboarded){ paintHome(); show('home'); }
-    else { paintSettings(); show('setup'); }
-  }
 
   /* ---------- лист 2: первичные настройки ---------- */
   $('setup-done').addEventListener('click', function(){
@@ -794,7 +661,7 @@
 
   /* ---------- лист 4: кормление ---------- */
   function startFeed(side){
-    Alarm.stop(); endNotified = false; askNotify();
+    Alarm.stop(); endNotified = false;
     S.feedSide = side; S.feedStart = Date.now(); S.snoozeUntil = null; save();
     $('overlay').hidden = true;
     paintFeed(); show('feed');
@@ -839,64 +706,6 @@
 
   /* ---------- лист 5: настройки ---------- */
   $('set-back').addEventListener('click', function(){ paintHome(); show('home'); });
-  $('acct-btn').addEventListener('click', function(){
-    if(S.account){ S.account = null; save(); paintSettings(); toast('Вышли из аккаунта'); }
-    else { mode = 'login'; paintAuth(); show('auth'); }
-  });
-  bioSupported().then(function(ok){
-    var row = $('bio-sw').closest('.field');
-    if(!ok){ row.hidden = true; return; }
-    $('bio-sw').checked = !!S.bioId;
-  });
-  $('bio-sw').addEventListener('change', function(){
-    var sw = this;
-    if(!sw.checked){ S.bioId = null; save(); $('bio-help').textContent = 'Вход по отпечатку выключен.'; return; }
-    if(!S.account){ sw.checked = false; toast('Сначала заведите аккаунт'); return; }
-    bioEnroll().then(function(){
-      $('bio-help').textContent = 'Готово — вход по отпечатку включён.';
-      toast('Отпечаток привязан');
-    }).catch(function(){
-      sw.checked = false;
-      toast('Не получилось привязать отпечаток');
-    });
-  });
-
-  $('lock').addEventListener('click', function(){
-    if(!S.account){ toast('Выход доступен с аккаунтом'); return; }
-    S.locked = true; save();
-    mode = 'login'; paintAuth(); show('auth');
-  });
-
-  var killArmed = false, killTimer = null;
-  $('kill').addEventListener('click', function(){
-    var btn = this;
-    if(!killArmed){
-      killArmed = true;
-      btn.classList.add('armed');
-      btn.textContent = 'Нажмите ещё раз — удалить навсегда';
-      $('kill-help').textContent = 'Отменится само через 5 секунд, если не нажимать.';
-      clearTimeout(killTimer);
-      killTimer = setTimeout(function(){
-        killArmed = false;
-        btn.classList.remove('armed');
-        btn.textContent = 'Удалить аккаунт и все данные';
-        $('kill-help').textContent = 'Сотрёт аккаунт, дневник и настройки без возможности восстановить. Приложение вернётся к первому запуску.';
-      }, 5000);
-      return;
-    }
-    clearTimeout(killTimer);
-    try{ localStorage.removeItem(KEY); }catch(e){}
-    for(var k in DEF) S[k] = (DEF[k] && DEF[k].constructor === Array) ? [] : DEF[k];
-    save();
-    killArmed = false;
-    btn.classList.remove('armed');
-    btn.textContent = 'Удалить аккаунт и все данные';
-    mode = 'signup';
-    paintSettings(); paintAuth(); paintHome();
-    show('auth');
-    toast('Аккаунт и все данные удалены');
-  });
-
   $('wipe').addEventListener('click', function(){
     if(!S.log.length){ toast('История и так пуста'); return; }
     S.log = []; S.lastAt = null; S.lastSide = null; save();
@@ -958,21 +767,34 @@
     document.addEventListener(ev, function(){ Alarm.unlock(); Alarm.stop(); }, { capture: true, passive: true });
   });
 
-  function askNotify(){
+  /* разрешение просим только когда мама сама включила переключатель в настройках — никаких всплывающих окон сами по себе */
+  function askNotify(done){
+    var fin = function(ok){ try{ done && done(ok); }catch(e){} };
     try{
       if(LN){
-        LN.requestPermissions().catch(function(){});
+        LN.requestPermissions().then(function(r){ fin(!r || r.display === 'granted'); }).catch(function(){ fin(false); });
         return;
       }
-      if('Notification' in window && Notification.permission === 'default'){
-        var r = Notification.requestPermission();
-        if(r && r.catch) r.catch(function(){});
-      }
-    }catch(e){}
+      if(!('Notification' in window)){ fin(false); return; }
+      if(Notification.permission === 'granted'){ fin(true); return; }
+      if(Notification.permission === 'denied'){ fin(false); return; }
+      var r = Notification.requestPermission(function(p){ fin(p === 'granted'); });
+      if(r && r.then) r.then(function(p){ fin(p === 'granted'); }).catch(function(){ fin(false); });
+    }catch(e){ fin(false); }
   }
+  (function(){
+    var sw = $('notif-sw'); if(!sw) return;
+    sw.addEventListener('change', function(){
+      if(!sw.checked){ S.notify = false; save(); if(LN){ try{ LN.cancel({ notifications: [{ id: 1 }, { id: 2 }] }).catch(function(){}); }catch(e){} } return; }
+      askNotify(function(ok){
+        S.notify = !!ok; sw.checked = !!ok; save();
+        if(!ok) toast('Разрешите уведомления в настройках телефона');
+      });
+    });
+  })();
   function notifyOS(title, body, tag){
     try{
-      if(LN || !document.hidden) return;
+      if(LN || !S.notify || !document.hidden) return;
       if(!('Notification' in window) || Notification.permission !== 'granted') return;
       var opts = { body: body, tag: tag, icon: 'icon-192.png', badge: 'icon-192.png',
                    vibrate: [500, 250, 500, 250, 800], requireInteraction: true, renotify: true };
@@ -997,7 +819,7 @@
   }
   var nativeReady = false;
   function nativeSchedule(){
-    if(!LN) return;
+    if(!LN || !S.notify) return;
     try{
       if(!nativeReady){
         nativeReady = true;
@@ -1068,7 +890,7 @@
     var na = nextAt();
     if(na && Date.now() >= na && $('overlay').hidden && quietOk() && notified !== na){
       notified = na;
-      if(current !== 'auth' && current !== 'setup'){ if(current !== 'home'){ paintHome(); show('home'); } openReminder(); }
+      if(current !== 'setup'){ if(current !== 'home'){ paintHome(); show('home'); } openReminder(); }
     }
   }, 1000);
 
@@ -1078,11 +900,20 @@
 
   /* ---------- старт ---------- */
   paintSettings();
-  if(S.locked && S.account){ mode = 'login'; paintAuth(); show('auth'); }
-  else if(S.feedStart){ paintFeed(); show('feed'); }
-  else if(!S.onboarded && !S.account && !S.skipped){ paintAuth(); show('auth'); }
+  if(S.feedStart){ paintFeed(); show('feed'); }
   else if(!S.onboarded){ show('setup'); }
   else { paintHome(); show('home'); }
+})();
+</script>
+
+<script>
+/* заставка: показываем логотип около секунды, потом плавно открываем приложение; касание — сразу */
+(function(){
+  var sp = document.getElementById('splash'); if(!sp) return;
+  var gone = false;
+  function hide(){ if(gone) return; gone = true; sp.classList.add('out'); setTimeout(function(){ if(sp.parentNode) sp.parentNode.removeChild(sp); }, 700); }
+  sp.addEventListener('pointerdown', hide);
+  setTimeout(hide, 1400);
 })();
 </script>
 
